@@ -1,0 +1,46 @@
+FROM node:18-alpine as npmbuild
+COPY app app
+RUN export NODE_OPTIONS=--openssl-legacy-provider && \
+  cd app/streamlit_drawable_canvas/frontend && \
+  npm install --force && \
+  npm run build
+
+FROM nvidia/cuda:11.8.0-runtime-ubuntu20.04
+RUN apt-get update && apt-get -y upgrade \
+  && apt-get install -y --no-install-recommends \
+    git \
+    wget \
+    g++ \
+    ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV TZ=Asia/Ho_Chi_Minh
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN apt-get update && apt-get install ffmpeg libsm6 libxext6  -y
+ENV PATH="/root/miniconda3/bin:${PATH}"
+ARG PATH="/root/miniconda3/bin:${PATH}"
+COPY app/setup.py setup.py 
+COPY app/README.md README.md
+COPY --from=npmbuild /app/streamlit_drawable_canvas/frontend/build /app/streamlit_drawable_canvas/frontend/build
+COPY app app
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh \
+    && mkdir -p /root/.conda \
+    && bash Miniconda3-latest-Linux-x86_64.sh -b \
+    && rm -f Miniconda3-latest-Linux-x86_64.sh \
+    && echo "Running $(conda --version)" && \
+    conda init bash && \
+    . /root/.bashrc && \
+    conda update conda && \
+    conda create -n ocr && \
+    conda activate ocr && \
+    conda install python=3.7 pip 
+RUN cd app && \
+    conda run -n ocr pip install -e . --no-cache-dir
+RUN cd app && \
+    conda run -n ocr python prerun0.py
+RUN cd app && \
+    conda run -n ocr python prerun1.py 
+
+WORKDIR /app
+ENTRYPOINT ["conda", "run", "-n", "ocr"]
+CMD ["streamlit", "run", "lama_easyocr_demo.py", "--server.fileWatcherType", "none"]

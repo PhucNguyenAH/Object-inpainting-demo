@@ -1,0 +1,40 @@
+services:
+  # cpu:
+  #   restart: always
+  #   build:
+  #     dockerfile: ./Dockerfile-cpu
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: "4"
+  #         memory: 1g
+  #   ports:
+  #     - "5000:8501"
+
+  cuda:
+    restart: always
+    build:
+      dockerfile: ./Dockerfile
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    ports:
+      - "5000:8501"
+
+#   proxy:
+#     restart: always
+#     image: caddy:2.6.4
+#     ports:
+#       - 80:80
+#       - 443:443
+#       - 443:443/udp
+#     volumes:
+#       - ./caddy/Caddyfile:/etc/caddy/Caddyfile
+#       - caddy_data:/data
+
+# volumes:
+#   caddy_data:

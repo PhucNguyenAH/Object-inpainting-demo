@@ -1,0 +1,39 @@
+stages:
+  - build
+  - deploy
+variables:
+  CONTAINER_RELEASE_IMAGE: $CI_REGISTRY_IMAGE:latest
+
+release-image:
+  image:
+    name: gcr.io/kaniko-project/executor:v1.9.0-debug
+    entrypoint: [""]
+  stage: build
+  tags:
+    - txt-rm-dev
+  script:
+    - echo "{\"auths\":{\"$CI_REGISTRY\":{\"username\":\"$CI_REGISTRY_USER\",\"password\":\"$CI_REGISTRY_PASSWORD\"}}}" > /kaniko/.docker/config.json
+    - /kaniko/executor --context $CI_PROJECT_DIR --dockerfile $CI_PROJECT_DIR/Dockerfile --destination $CONTAINER_RELEASE_IMAGE --digest-file digest.txt
+  only:
+    - master
+
+deploy-dev:
+  stage: deploy
+  environment:
+    name: txt-rm.dev.ycomm.work
+  image: alpine
+  tags:
+    - deploy-txt-rm-dev
+  before_script:
+    - apk add openssh-client rsync
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - echo -e "Host *\n\tStrictHostKeyChecking no\n\n" > ~/.ssh/config
+    - cat $IDENTITY_FILE > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+  script:
+    - ssh $USERNAME@$SERVER_IP "pwd"
+    - ssh $USERNAME@$SERVER_IP "ls -alh /home/vndev/phucnah/text_removal_demo/"
+    - rsync --delete --exclude '.git' --recursive --times -v --progress ./ $USERNAME@$SERVER_IP:/home/vndev/phucnah/text_removal_demo/
+    - ssh $USERNAME@$SERVER_IP "cd /home/vndev/phucnah/text_removal_demo/; sh deploy.sh"
+

@@ -1,0 +1,22 @@
+{ 
+    servers {
+        timeouts {
+           read_body   5m
+           read_header 1m
+           write       5m
+           idle        5m
+        }
+    }
+}
+
+txt-rm.dev.ycomm.work {
+    tls jisuya417@gmail.com
+    reverse_proxy 10.100.11.119:5000
+    request_body {
+        max_size 500MB
+    }
+    log {
+        output stdout
+        format console
+    }
+}
