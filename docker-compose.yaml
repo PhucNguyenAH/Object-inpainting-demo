@@ -14,7 +14,7 @@ services:
   cuda:
     restart: always
     build:
-      dockerfile: ./Dockerfile
+      dockerfile: ./Dockerfile-cuda
     deploy:
       resources:
         reservations:
