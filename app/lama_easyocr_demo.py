@@ -18,11 +18,6 @@ from torch.utils.data._utils.collate import default_collate
 import torch.nn as nn
 from saicinpainting.training.trainers.default import DefaultInpaintingTrainingModule
 
-org_time = 0
-sub_time = 0
-sub_image_org = None
-sub_mask = None
-mask2 = None
 image = None
 filename = None
 newW = 450
@@ -222,7 +217,7 @@ img_type = st.sidebar.radio("Output image type:",["jpg","png"],index=0,horizonta
 if image is not None:
     bbox_sample = st.session_state.initial_dict['objects'][0]
     # Create a canvas component
-    col1, col2, col3 = st.columns(3)
+    col1, col2 = st.columns(2)
     with col1:
         st.header("Original")
         if erase_btn:
@@ -259,17 +254,12 @@ if image is not None:
                 mask_tmp = normalize(mask_tmp)
                 mask = np.add(st.session_state.mask, mask_tmp) 
                 mask[mask > 1] = 1.
-                mask2 = np.subtract(mask,st.session_state.mask)
             else:
                 mask = canvas_result.image_data.copy()
                 mask = normalize(mask)
-                mask2 = mask.copy()
 
             if flag or flag_bbox:
-                start0 = time.time()
                 cur_res = inference(image,mask)
-                end0 = time.time()
-                org_time = end0-start0
                 st.session_state.img_res = cur_res
                 st.session_state.mask = mask
             if "mask" in st.session_state:
@@ -279,7 +269,6 @@ if image is not None:
                     st.session_state.mask = mask
             st.header("Result")                
             if "img_res" in st.session_state:  
-                st.text(f"Whole image time: {org_time}")
                 st.image(st.session_state.img_res) 
                 if img_type == "jpg":
                     img_BufferedReader = download_image(cv2.resize(st.session_state.img_res,(W,H), interpolation = cv2.INTER_AREA), type="jpg")
@@ -293,67 +282,10 @@ if image is not None:
                     background-color: #00cc00;color:white;font-size:20px;border-radius:10px 10px 10px 10px;
                 }
                 </style>""", unsafe_allow_html=True)    
-    with col3:
-        # Do something interesting with the image data and paths
-        if canvas_result.image_data is not None:
-            if 1. not in mask2:
-                mask2 = mask.copy()
-            coors = np.where(mask2 == 1)
-            if min(coors[1])-100>0:
-                xmin = min(coors[1])-100
-            else:
-                xmin=0
-            if max(coors[1])+100<W:
-                xmax = max(coors[1])+100
-            else:
-                xmax = W
-            if min(coors[0])-100>0:
-                ymin = min(coors[0])-100
-            else:
-                ymin=0
-            if max(coors[0])+100<H:
-                ymax = max(coors[0])+100
-            else:
-                ymax = H
-            
-            if flag or flag_bbox:
-                if "img_res2" in st.session_state:
-                    sub_image_org = st.session_state.img_res2[ymin:ymax,xmin:xmax]
-                else:
-                    sub_image_org = image_org[ymin:ymax,xmin:xmax]
-                sub_image = np.transpose(sub_image_org, (2, 0, 1))
-                sub_image = sub_image.astype('float32') / 255
-                sub_mask = mask2[ymin:ymax,xmin:xmax]
-                start1 = time.time()
-                sub_cur_res = inference(sub_image,sub_mask)
-                if "img_res2" in st.session_state:
-                    cur_res2 = st.session_state.img_res2.copy()
-                else:
-                    cur_res2 = image_org
-                cur_res2[ymin:ymax,xmin:xmax] = sub_cur_res
-                end1 = time.time()
-                sub_time = end1-start1
-                st.session_state.img_res2 = cur_res2
-            st.header("Result")                
-            if "img_res" in st.session_state:  
-                st.text(f"Cropped image time: {sub_time}")
-                st.image(st.session_state.img_res2) 
-            m = st.markdown("""
-                <style>
-                div.stDownloadButton > button:first-child {
-                    background-color: #00cc00;color:white;font-size:20px;border-radius:10px 10px 10px 10px;
-                }
-                </style>""", unsafe_allow_html=True)
     with col1:
         st.header("Mask")
         if mask is not None:
             st.image(mask)
-        if mask2 is not None:
-            st.image(mask2)
-        if sub_image_org is not None:
-            st.image(sub_image_org)
-        if sub_mask is not None:
-            st.image(sub_mask)
         
         if canvas_result.json_data is not None:
             objects = pd.json_normalize(canvas_result.json_data["objects"]) # need to convert obj to str because PyArrow
