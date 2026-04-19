@@ -33,12 +33,12 @@ bg_color = "#eee"
 
 st.set_page_config(layout="wide")
 
-if torch.cuda.is_available():
-    device = torch.device("cuda")
-    cuda = True
-else:
-    device = torch.device("cpu")
-    cuda = False
+# if torch.cuda.is_available():
+#     device = torch.device("cuda")
+#     cuda = True
+# else:
+device = torch.device("cpu")
+cuda = False
 
 def ceil_modulo(x, mod):
     if x % mod == 0:

@@ -15,7 +15,7 @@ def readme() -> str:
 
 setuptools.setup(
     name="streamlit-drawable-canvas",
-    version="0.10.0",
+    version="0.9.3",
     author="Fanilo ANDRIANASOLO",
     author_email="andfanilo@gmail.com",
     description="A Streamlit custom component for a free drawing canvas using Fabric.js.",
@@ -35,7 +35,8 @@ setuptools.setup(
         "easydict==1.9.0",
         "scikit-image==0.17.2",
         "scikit-learn==0.24.2",
-        "opencv-python==4.5.4.60",
+        "opencv-python==4.5.5.64",
+        "opencv-python-headless==4.8.0.74",
         "pytorch-lightning==1.2.9",
         "tabulate",
         "kornia==0.5.0",
@@ -45,7 +46,7 @@ setuptools.setup(
         "hydra-core==1.1.0",
         "wldhx.yadisk-direct",
         "matplotlib",
-        "tensorflow",
+        # "tensorflow",
         "joblib",
         "pandas",
         "Flask",
