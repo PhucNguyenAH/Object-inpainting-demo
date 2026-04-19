@@ -46,7 +46,7 @@ setuptools.setup(
         "hydra-core==1.1.0",
         "wldhx.yadisk-direct",
         "matplotlib",
-        # "tensorflow",
+        "tensorflow==2.11.0",
         "joblib",
         "pandas",
         "Flask",
@@ -56,5 +56,6 @@ setuptools.setup(
         "easyocr",
         "streamlit_option_menu",
         "protobuf==3.20.*",
+        "streamlit-drawable-canvas==0.9.3"
     ]
 )
